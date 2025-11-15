@@ -42,6 +42,7 @@ class TodoApp {
         this.taskInput = document.getElementById('taskInput');
         this.dueDateInput = document.getElementById('dueDateInput');
         this.dueTimeInput = document.getElementById('dueTimeInput');
+        this.prioritySelect = document.getElementById('prioritySelect');
         this.locationInput = document.getElementById('locationInput');
         this.locationSuggestions = document.getElementById('locationSuggestions');
         this.addBtn = document.getElementById('addBtn');
@@ -1325,6 +1326,7 @@ class TodoApp {
         this.timeRemaining = 0;
         this.timerDuration = 0;
         this.currentTask = null;
+        this.isBreakTime = false;
 
         // Reset UI
         this.focusMode.classList.add('hidden');
@@ -1332,6 +1334,9 @@ class TodoApp {
         this.resumeTimer.classList.add('hidden');
         this.progressBar.style.width = '0%';
         this.countdownTimer.classList.remove('warning', 'danger');
+
+        // Restore blue background color
+        document.querySelector('.focus-left').style.background = 'linear-gradient(135deg, var(--blue-500) 0%, var(--blue-600) 100%)';
     }
 
     saveToStorage() {

@@ -242,8 +242,22 @@ header h1 {
     min-width: 120px;
 }
 
+.priority-select {
+    padding: 12px 16px;
+    border: 1.5px solid var(--border-light);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+    min-width: 130px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
 #dueDateInput:focus,
-#dueTimeInput:focus {
+#dueTimeInput:focus,
+.priority-select:focus {
     border-color: var(--blue-500);
     box-shadow: 0 0 0 3px var(--blue-100);
 }
@@ -461,6 +475,12 @@ header h1 {
 
 .task-checkbox:hover {
     transform: scale(1.1);
+}
+
+.task-priority {
+    font-size: 1rem;
+    margin-right: 8px;
+    flex-shrink: 0;
 }
 
 .task-due-date {
