@@ -7,6 +7,18 @@ class TodoApp {
         this.notifiedTasks = new Set();
         this.notificationCheckInterval = null;
 
+        // Pomodoro timer properties
+        this.focusModeActive = false;
+        this.timerInterval = null;
+        this.liveClockInterval = null;
+        this.timerDuration = 0;
+        this.timeRemaining = 0;
+        this.timerPaused = false;
+        this.currentTask = null;
+
+        // Keyboard navigation
+        this.selectedTaskIndex = -1;
+
         this.cacheDOMElements();
         this.attachEventListeners();
         this.loadFromStorage();
@@ -31,6 +43,21 @@ class TodoApp {
         this.filters = document.querySelectorAll('.filter');
         this.themeToggle = document.getElementById('themeToggle');
         this.weatherWidget = document.getElementById('weatherWidget');
+
+        // Focus mode elements
+        this.focusMode = document.getElementById('focusMode');
+        this.liveClock = document.getElementById('liveClock');
+        this.liveDate = document.getElementById('liveDate');
+        this.countdownTimer = document.getElementById('countdownTimer');
+        this.focusTaskName = document.getElementById('focusTaskName');
+        this.pauseTimer = document.getElementById('pauseTimer');
+        this.resumeTimer = document.getElementById('resumeTimer');
+        this.stopTimer = document.getElementById('stopTimer');
+        this.progressBar = document.getElementById('progressBar');
+
+        // Help modal
+        this.helpModal = document.getElementById('helpModal');
+        this.closeHelp = document.getElementById('closeHelp');
     }
 
     attachEventListeners() {
@@ -66,6 +93,22 @@ class TodoApp {
 
         // Theme toggle
         this.themeToggle.addEventListener('click', () => this.toggleTheme());
+
+        // Focus mode controls
+        this.pauseTimer.addEventListener('click', () => this.pauseFocusTimer());
+        this.resumeTimer.addEventListener('click', () => this.resumeFocusTimer());
+        this.stopTimer.addEventListener('click', () => this.stopFocusMode());
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => this.handleKeyboardShortcut(e));
+
+        // Help modal
+        this.closeHelp.addEventListener('click', () => this.hideHelp());
+        this.helpModal.addEventListener('click', (e) => {
+            if (e.target === this.helpModal) {
+                this.hideHelp();
+            }
+        });
     }
 
     addTask() {
@@ -303,6 +346,9 @@ class TodoApp {
 
         // Attach event listeners to task items
         this.attachTaskEventListeners();
+
+        // Restore selection after UI update
+        this.updateTaskSelection();
     }
 
     renderTask(task) {
@@ -350,6 +396,7 @@ class TodoApp {
                         <span class="task-text">${this.escapeHtml(task.text)}</span>
                         ${locationDisplay}
                     </div>
+                    ${!task.completed ? `<button class="focus-btn" data-task-id="${task.id}">Focus</button>` : ''}
                     <button class="delete-btn">×</button>
                 </div>
             </li>
@@ -372,6 +419,14 @@ class TodoApp {
                 const taskItem = e.target.closest('.task-item');
                 const id = taskItem.dataset.id;
                 this.deleteTask(id);
+            });
+        });
+
+        // Focus button
+        this.taskList.querySelectorAll('.focus-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const taskId = e.target.dataset.taskId;
+                this.startFocusMode(taskId);
             });
         });
 
@@ -710,6 +765,325 @@ class TodoApp {
                 }, 10);
             }
         };
+    }
+
+    // Keyboard Shortcuts
+    handleKeyboardShortcut(e) {
+        // Don't trigger shortcuts when typing in inputs
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            // Allow Escape to work in inputs
+            if (e.key === 'Escape') {
+                e.target.blur();
+                this.cancelEdit();
+            }
+            return;
+        }
+
+        // Exit focus mode with Escape
+        if (e.key === 'Escape' && this.focusModeActive) {
+            e.preventDefault();
+            this.stopFocusMode();
+            return;
+        }
+
+        // Show help with ?
+        if (e.key === '?' && !this.focusModeActive) {
+            e.preventDefault();
+            this.showHelp();
+            return;
+        }
+
+        // Close help with Escape
+        if (e.key === 'Escape' && !this.helpModal.classList.contains('hidden')) {
+            e.preventDefault();
+            this.hideHelp();
+            return;
+        }
+
+        // Don't run shortcuts in focus mode or help modal
+        if (this.focusModeActive || !this.helpModal.classList.contains('hidden')) {
+            return;
+        }
+
+        const filteredTasks = this.getFilteredTasks();
+        if (filteredTasks.length === 0 && e.key !== 'n' && e.key !== 'N') {
+            return;
+        }
+
+        switch(e.key.toLowerCase()) {
+            case 'n':
+                // New task - focus on input
+                e.preventDefault();
+                this.taskInput.focus();
+                break;
+
+            case 'arrowdown':
+                // Navigate down
+                e.preventDefault();
+                if (this.selectedTaskIndex < filteredTasks.length - 1) {
+                    this.selectedTaskIndex++;
+                    this.updateTaskSelection();
+                }
+                break;
+
+            case 'arrowup':
+                // Navigate up
+                e.preventDefault();
+                if (this.selectedTaskIndex > 0) {
+                    this.selectedTaskIndex--;
+                    this.updateTaskSelection();
+                } else if (this.selectedTaskIndex === -1 && filteredTasks.length > 0) {
+                    this.selectedTaskIndex = 0;
+                    this.updateTaskSelection();
+                }
+                break;
+
+            case ' ':
+                // Toggle complete
+                e.preventDefault();
+                if (this.selectedTaskIndex >= 0 && this.selectedTaskIndex < filteredTasks.length) {
+                    const task = filteredTasks[this.selectedTaskIndex];
+                    this.toggleTask(task.id);
+                }
+                break;
+
+            case 'enter':
+                // Edit task
+                e.preventDefault();
+                if (this.selectedTaskIndex >= 0 && this.selectedTaskIndex < filteredTasks.length) {
+                    const task = filteredTasks[this.selectedTaskIndex];
+                    this.startEdit(task.id);
+                }
+                break;
+
+            case 'delete':
+            case 'backspace':
+                // Delete task
+                e.preventDefault();
+                if (this.selectedTaskIndex >= 0 && this.selectedTaskIndex < filteredTasks.length) {
+                    const task = filteredTasks[this.selectedTaskIndex];
+                    this.deleteTask(task.id);
+                    // Adjust selection after delete
+                    if (this.selectedTaskIndex >= filteredTasks.length - 1) {
+                        this.selectedTaskIndex = filteredTasks.length - 2;
+                    }
+                    this.updateTaskSelection();
+                }
+                break;
+
+            case 'f':
+                // Focus mode
+                e.preventDefault();
+                if (this.selectedTaskIndex >= 0 && this.selectedTaskIndex < filteredTasks.length) {
+                    const task = filteredTasks[this.selectedTaskIndex];
+                    if (!task.completed) {
+                        this.startFocusMode(task.id);
+                    }
+                }
+                break;
+        }
+    }
+
+    updateTaskSelection() {
+        // Remove previous selection
+        document.querySelectorAll('.task-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+
+        // Add selection to current task
+        const filteredTasks = this.getFilteredTasks();
+        if (this.selectedTaskIndex >= 0 && this.selectedTaskIndex < filteredTasks.length) {
+            const selectedTask = filteredTasks[this.selectedTaskIndex];
+            const taskElement = document.querySelector(`[data-id="${selectedTask.id}"]`);
+            if (taskElement) {
+                taskElement.classList.add('selected');
+                taskElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    }
+
+    showHelp() {
+        this.helpModal.classList.remove('hidden');
+    }
+
+    hideHelp() {
+        this.helpModal.classList.add('hidden');
+    }
+
+    // Pomodoro Timer Functions
+    async startFocusMode(taskId) {
+        const task = this.tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        // Ask user for timer duration
+        const minutes = prompt('How many minutes do you want to focus?', '25');
+        if (!minutes || isNaN(minutes) || minutes <= 0) return;
+
+        this.currentTask = task;
+        this.timerDuration = parseInt(minutes) * 60; // Convert to seconds
+        this.timeRemaining = this.timerDuration;
+        this.timerPaused = false;
+        this.focusModeActive = true;
+
+        // Show focus mode
+        this.focusMode.classList.remove('hidden');
+        this.focusTaskName.textContent = task.text;
+
+        // Start live clock
+        this.startLiveClock();
+
+        // Start countdown timer
+        this.startCountdown();
+    }
+
+    startLiveClock() {
+        this.updateLiveClock();
+        this.liveClockInterval = setInterval(() => {
+            this.updateLiveClock();
+        }, 1000);
+    }
+
+    updateLiveClock() {
+        const now = new Date();
+
+        // Update time
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        this.liveClock.textContent = `${hours}:${minutes}:${seconds}`;
+
+        // Update date
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dayName = days[now.getDay()];
+        const monthName = months[now.getMonth()];
+        const date = now.getDate();
+        this.liveDate.textContent = `${dayName}, ${monthName} ${date}`;
+    }
+
+    startCountdown() {
+        this.updateCountdownDisplay();
+        this.timerInterval = setInterval(() => {
+            if (!this.timerPaused) {
+                this.timeRemaining--;
+
+                this.updateCountdownDisplay();
+                this.updateProgressBar();
+
+                // Check if timer finished
+                if (this.timeRemaining <= 0) {
+                    this.timerComplete();
+                }
+            }
+        }, 1000);
+    }
+
+    updateCountdownDisplay() {
+        const minutes = Math.floor(this.timeRemaining / 60);
+        const seconds = this.timeRemaining % 60;
+        this.countdownTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Add warning/danger classes
+        this.countdownTimer.classList.remove('warning', 'danger');
+        const percentRemaining = (this.timeRemaining / this.timerDuration) * 100;
+
+        if (percentRemaining <= 10) {
+            this.countdownTimer.classList.add('danger');
+        } else if (percentRemaining <= 25) {
+            this.countdownTimer.classList.add('warning');
+        }
+    }
+
+    updateProgressBar() {
+        const percentComplete = ((this.timerDuration - this.timeRemaining) / this.timerDuration) * 100;
+        this.progressBar.style.width = `${percentComplete}%`;
+    }
+
+    pauseFocusTimer() {
+        this.timerPaused = true;
+        this.pauseTimer.classList.add('hidden');
+        this.resumeTimer.classList.remove('hidden');
+    }
+
+    resumeFocusTimer() {
+        this.timerPaused = false;
+        this.pauseTimer.classList.remove('hidden');
+        this.resumeTimer.classList.add('hidden');
+    }
+
+    stopFocusMode() {
+        // Confirm before stopping
+        if (!confirm('Are you sure you want to stop the focus session?')) {
+            return;
+        }
+
+        this.cleanupFocusMode();
+    }
+
+    timerComplete() {
+        this.cleanupFocusMode();
+
+        // Send notification
+        if (Notification.permission === 'granted') {
+            const notification = new Notification('Focus Session Complete!', {
+                body: `Great job! You completed: ${this.currentTask.text}`,
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2330d158"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+                requireInteraction: true
+            });
+
+            notification.onclick = () => {
+                window.focus();
+                notification.close();
+            };
+        }
+
+        // Play a subtle sound (optional - browser support varies)
+        try {
+            const audio = new AudioContext();
+            const oscillator = audio.createOscillator();
+            const gainNode = audio.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audio.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audio.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + 0.5);
+
+            oscillator.start(audio.currentTime);
+            oscillator.stop(audio.currentTime + 0.5);
+        } catch (e) {
+            console.log('Audio not supported');
+        }
+    }
+
+    cleanupFocusMode() {
+        // Clear intervals
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        if (this.liveClockInterval) {
+            clearInterval(this.liveClockInterval);
+            this.liveClockInterval = null;
+        }
+
+        // Reset state
+        this.focusModeActive = false;
+        this.timerPaused = false;
+        this.timeRemaining = 0;
+        this.timerDuration = 0;
+        this.currentTask = null;
+
+        // Reset UI
+        this.focusMode.classList.add('hidden');
+        this.pauseTimer.classList.remove('hidden');
+        this.resumeTimer.classList.add('hidden');
+        this.progressBar.style.width = '0%';
+        this.countdownTimer.classList.remove('warning', 'danger');
     }
 
     saveToStorage() {
