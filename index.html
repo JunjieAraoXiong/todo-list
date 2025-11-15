@@ -15,6 +15,13 @@
                 </div>
             </div>
             <h1>Tasks</h1>
+            <button id="statsToggle" class="stats-toggle" title="View statistics">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="20" x2="12" y2="10"></line>
+                    <line x1="18" y1="20" x2="18" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="16"></line>
+                </svg>
+            </button>
             <button id="themeToggle" class="theme-toggle" title="Toggle theme">
                 <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="5"></circle>
@@ -196,7 +203,22 @@
                     </div>
                 </div>
                 <div class="shortcut-group">
+                    <h3>Editing</h3>
+                    <div class="shortcut-item">
+                        <kbd>⌘</kbd><kbd>Z</kbd>
+                        <span>Undo</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>⌘</kbd><kbd>⇧</kbd><kbd>Z</kbd>
+                        <span>Redo</span>
+                    </div>
+                </div>
+                <div class="shortcut-group">
                     <h3>Other</h3>
+                    <div class="shortcut-item">
+                        <kbd>S</kbd>
+                        <span>View statistics</span>
+                    </div>
                     <div class="shortcut-item">
                         <kbd>?</kbd>
                         <span>Show this help</span>
@@ -240,6 +262,73 @@
                 </div>
                 <div class="timer-progress">
                     <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Dashboard Modal -->
+    <div id="statsModal" class="stats-modal hidden">
+        <div class="stats-content">
+            <div class="stats-header">
+                <h2>Activity Overview</h2>
+                <button id="closeStats" class="close-stats-btn">×</button>
+            </div>
+
+            <div class="stats-heatmap-section">
+                <div class="heatmap-header">
+                    <h3>Last 12 Weeks</h3>
+                    <div class="activity-summary">
+                        <span id="activityCount">0</span> days active
+                    </div>
+                </div>
+                <div class="contribution-graph" id="contributionGraph">
+                    <!-- GitHub-style heatmap will be generated here -->
+                </div>
+                <div class="contribution-legend">
+                    <span class="legend-label">Less</span>
+                    <div class="legend-squares">
+                        <div class="legend-square level-0"></div>
+                        <div class="legend-square level-1"></div>
+                        <div class="legend-square level-2"></div>
+                        <div class="legend-square level-3"></div>
+                        <div class="legend-square level-4"></div>
+                    </div>
+                    <span class="legend-label">More</span>
+                </div>
+            </div>
+
+            <div class="stats-cards-row">
+                <div class="stat-card-compact">
+                    <div class="stat-icon-small">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-value-compact" id="tasksCompletedToday">0</div>
+                        <div class="stat-label-compact">Tasks Today</div>
+                    </div>
+                </div>
+
+                <div class="stat-card-compact">
+                    <div class="stat-icon-small">🎯</div>
+                    <div class="stat-content">
+                        <div class="stat-value-compact" id="pomodorosCompletedToday">0</div>
+                        <div class="stat-label-compact">Pomodoros</div>
+                    </div>
+                </div>
+
+                <div class="stat-card-compact">
+                    <div class="stat-icon-small">⏱️</div>
+                    <div class="stat-content">
+                        <div class="stat-value-compact" id="focusTimeToday">0 min</div>
+                        <div class="stat-label-compact">Focus Time</div>
+                    </div>
+                </div>
+
+                <div class="stat-card-compact">
+                    <div class="stat-icon-small">🔥</div>
+                    <div class="stat-content">
+                        <div class="stat-value-compact" id="currentStreak">0 days</div>
+                        <div class="stat-label-compact">Streak</div>
+                    </div>
                 </div>
             </div>
         </div>
