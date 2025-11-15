@@ -1,4 +1,4 @@
-# Task Manager Pro
+# Blue Pomodoro - your personal task planning agent.
 
 A feature-rich, modern task management application built as part of Berkeley's CS61B - Lecture 34 (Software Engineering III). This app combines essential task management with productivity features like Pomodoro timers, weather integration, and comprehensive keyboard shortcuts.
 
