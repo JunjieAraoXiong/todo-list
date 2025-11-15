@@ -85,6 +85,71 @@
         </footer>
     </div>
 
+    <!-- Completion Celebration -->
+    <div id="celebrationOverlay" class="celebration-overlay hidden">
+        <canvas id="confettiCanvas"></canvas>
+        <div class="celebration-message">
+            <div class="celebration-icon">🎉</div>
+            <h2 class="celebration-title">All Tasks Complete!</h2>
+            <p class="celebration-subtitle">Great work! You're crushing it today.</p>
+        </div>
+    </div>
+
+    <!-- Onboarding Overlay -->
+    <div id="onboardingOverlay" class="onboarding-overlay hidden">
+        <div class="onboarding-content">
+            <h1>Welcome to Tasks! 👋</h1>
+            <p class="welcome-text">Your minimalist, Apple-inspired productivity companion</p>
+
+            <div class="onboarding-features">
+                <div class="feature-highlight">
+                    <div class="feature-icon">⌨️</div>
+                    <h3>Keyboard Shortcuts</h3>
+                    <p>Navigate faster with keyboard shortcuts</p>
+                </div>
+                <div class="feature-highlight">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Focus Mode</h3>
+                    <p>Pomodoro timer to help you concentrate</p>
+                </div>
+                <div class="feature-highlight">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Smart Notifications</h3>
+                    <p>Get reminded when tasks are due</p>
+                </div>
+            </div>
+
+            <div class="quick-shortcuts">
+                <h3>Quick Shortcuts</h3>
+                <div class="shortcuts-row">
+                    <div class="shortcut-chip">
+                        <kbd>N</kbd>
+                        <span>New Task</span>
+                    </div>
+                    <div class="shortcut-chip">
+                        <kbd>↑</kbd><kbd>↓</kbd>
+                        <span>Navigate</span>
+                    </div>
+                    <div class="shortcut-chip">
+                        <kbd>Space</kbd>
+                        <span>Complete</span>
+                    </div>
+                    <div class="shortcut-chip">
+                        <kbd>F</kbd>
+                        <span>Focus</span>
+                    </div>
+                    <div class="shortcut-chip">
+                        <kbd>?</kbd>
+                        <span>Help</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="gotItBtn" class="got-it-btn">Got it, let's start!</button>
+            <p class="tip-text">Press <kbd>?</kbd> anytime to see all shortcuts</p>
+        </div>
+    </div>
+
     <!-- Keyboard Shortcuts Help Modal -->
     <div id="helpModal" class="help-modal hidden">
         <div class="help-content">

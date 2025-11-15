@@ -816,6 +816,315 @@ footer {
     }
 }
 
+/* Completion Celebration */
+.celebration-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(10px);
+    z-index: 10002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+    pointer-events: none;
+}
+
+.celebration-overlay.hidden {
+    display: none;
+}
+
+#confettiCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.celebration-message {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    animation: celebrationPop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes celebrationPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(30px);
+    }
+    50% {
+        transform: scale(1.05) translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.celebration-icon {
+    font-size: 6rem;
+    margin-bottom: 20px;
+    animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.celebration-title {
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.celebration-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.3rem;
+    font-weight: 400;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 600px) {
+    .celebration-title {
+        font-size: 2rem;
+    }
+
+    .celebration-subtitle {
+        font-size: 1rem;
+    }
+
+    .celebration-icon {
+        font-size: 4rem;
+    }
+}
+
+/* Onboarding Overlay */
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.4s ease;
+}
+
+.onboarding-overlay.hidden {
+    display: none;
+}
+
+.onboarding-content {
+    background: var(--bg-primary);
+    border-radius: 20px;
+    padding: 50px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    animation: slideUpBig 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+}
+
+@keyframes slideUpBig {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.onboarding-content h1 {
+    color: var(--text-primary);
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.welcome-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+}
+
+.onboarding-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.feature-highlight {
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feature-highlight:hover {
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.feature-highlight h3 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.feature-highlight p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.quick-shortcuts {
+    background: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+}
+
+.quick-shortcuts h3 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.shortcuts-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.shortcut-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px 20px;
+    background: var(--bg-primary);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.shortcut-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.shortcut-chip kbd {
+    background: var(--blue-500);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 3px 0 var(--blue-600);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', monospace;
+    min-width: 45px;
+    text-align: center;
+}
+
+.shortcut-chip span {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.got-it-btn {
+    width: 100%;
+    max-width: 400px;
+    padding: 18px 32px;
+    background: linear-gradient(135deg, var(--blue-500) 0%, var(--blue-600) 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
+    margin-bottom: 15px;
+}
+
+.got-it-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4);
+}
+
+.got-it-btn:active {
+    transform: translateY(0);
+}
+
+.tip-text {
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+}
+
+.tip-text kbd {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+/* Responsive Onboarding */
+@media (max-width: 600px) {
+    .onboarding-content {
+        padding: 30px 20px;
+    }
+
+    .onboarding-content h1 {
+        font-size: 2rem;
+    }
+
+    .onboarding-features {
+        grid-template-columns: 1fr;
+    }
+
+    .shortcuts-row {
+        flex-direction: column;
+    }
+
+    .shortcut-chip {
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
 /* Keyboard Shortcuts Help Modal */
 .help-modal {
     position: fixed;
@@ -842,6 +1151,15 @@ footer {
     }
     to {
         opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
     }
 }
 

@@ -15,9 +15,17 @@ class TodoApp {
         this.timeRemaining = 0;
         this.timerPaused = false;
         this.currentTask = null;
+        this.isBreakTime = false;
+        this.pomodoroCount = 0;
+        this.pomodorosToday = 0;
 
         // Keyboard navigation
         this.selectedTaskIndex = -1;
+
+        // Celebration
+        this.hasShownCelebration = false;
+        this.confettiParticles = [];
+        this.confettiAnimationFrame = null;
 
         this.cacheDOMElements();
         this.attachEventListeners();
@@ -25,6 +33,7 @@ class TodoApp {
         this.loadTheme();
         this.initWeather();
         this.initNotifications();
+        this.checkFirstVisit();
         this.updateUI();
         this.handleRouting();
     }
@@ -58,6 +67,14 @@ class TodoApp {
         // Help modal
         this.helpModal = document.getElementById('helpModal');
         this.closeHelp = document.getElementById('closeHelp');
+
+        // Onboarding overlay
+        this.onboardingOverlay = document.getElementById('onboardingOverlay');
+        this.gotItBtn = document.getElementById('gotItBtn');
+
+        // Celebration overlay
+        this.celebrationOverlay = document.getElementById('celebrationOverlay');
+        this.confettiCanvas = document.getElementById('confettiCanvas');
     }
 
     attachEventListeners() {
@@ -107,6 +124,17 @@ class TodoApp {
         this.helpModal.addEventListener('click', (e) => {
             if (e.target === this.helpModal) {
                 this.hideHelp();
+            }
+        });
+
+        // Onboarding overlay
+        this.gotItBtn.addEventListener('click', () => this.dismissOnboarding());
+
+        // Handle window resize for confetti canvas
+        window.addEventListener('resize', () => {
+            if (!this.celebrationOverlay.classList.contains('hidden')) {
+                this.confettiCanvas.width = window.innerWidth;
+                this.confettiCanvas.height = window.innerHeight;
             }
         });
     }
@@ -349,6 +377,9 @@ class TodoApp {
 
         // Restore selection after UI update
         this.updateTaskSelection();
+
+        // Check for completion celebration
+        this.checkForCompletion();
     }
 
     renderTask(task) {
@@ -910,6 +941,178 @@ class TodoApp {
         this.helpModal.classList.add('hidden');
     }
 
+    // Onboarding
+    checkFirstVisit() {
+        const hasVisited = localStorage.getItem('hasVisitedTasks');
+        if (!hasVisited) {
+            // Show onboarding overlay
+            this.onboardingOverlay.classList.remove('hidden');
+        }
+    }
+
+    dismissOnboarding() {
+        // Hide the overlay with fade out
+        this.onboardingOverlay.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            this.onboardingOverlay.classList.add('hidden');
+            this.onboardingOverlay.style.animation = '';
+        }, 300);
+
+        // Mark as visited
+        localStorage.setItem('hasVisitedTasks', 'true');
+
+        // Focus on task input to start
+        this.taskInput.focus();
+    }
+
+    // Completion Celebration
+    checkForCompletion() {
+        const activeTasks = this.tasks.filter(t => !t.completed);
+        const completedTasks = this.tasks.filter(t => t.completed);
+
+        // Show celebration if:
+        // 1. There's at least one completed task
+        // 2. All tasks are completed
+        // 3. Haven't shown celebration yet for this batch
+        if (completedTasks.length > 0 && activeTasks.length === 0 && !this.hasShownCelebration) {
+            this.showCelebration();
+            this.hasShownCelebration = true;
+        }
+
+        // Reset celebration flag when there are active tasks
+        if (activeTasks.length > 0) {
+            this.hasShownCelebration = false;
+        }
+    }
+
+    showCelebration() {
+        // Show overlay
+        this.celebrationOverlay.classList.remove('hidden');
+
+        // Play sound effect
+        this.playCelebrationSound();
+
+        // Setup and start confetti
+        this.setupConfetti();
+        this.animateConfetti();
+
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            this.hideCelebration();
+        }, 4000);
+    }
+
+    hideCelebration() {
+        this.celebrationOverlay.style.animation = 'fadeOut 0.5s ease';
+        setTimeout(() => {
+            this.celebrationOverlay.classList.add('hidden');
+            this.celebrationOverlay.style.animation = '';
+
+            // Stop confetti animation
+            if (this.confettiAnimationFrame) {
+                cancelAnimationFrame(this.confettiAnimationFrame);
+                this.confettiAnimationFrame = null;
+            }
+            this.confettiParticles = [];
+        }, 500);
+    }
+
+    playCelebrationSound() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create a more cheerful multi-note sound
+            const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 (C major chord)
+
+            notes.forEach((frequency, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+
+                const startTime = audioContext.currentTime + (index * 0.1);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.5);
+            });
+        } catch (e) {
+            console.log('Audio not supported:', e);
+        }
+    }
+
+    setupConfetti() {
+        // Set canvas size
+        this.confettiCanvas.width = window.innerWidth;
+        this.confettiCanvas.height = window.innerHeight;
+
+        // Blue-themed colors (blue, grey, white, light blue)
+        const colors = [
+            '#0071e3', // blue-500
+            '#005bb5', // blue-600
+            '#4ca6e8', // blue-400
+            '#a8d5f7', // blue-200
+            '#ffffff', // white
+            '#e8e8ed', // light grey
+            '#c7c7cc', // grey
+            '#86868b'  // dark grey
+        ];
+
+        // Create confetti particles
+        this.confettiParticles = [];
+        const particleCount = 150;
+
+        for (let i = 0; i < particleCount; i++) {
+            this.confettiParticles.push({
+                x: Math.random() * this.confettiCanvas.width,
+                y: Math.random() * this.confettiCanvas.height - this.confettiCanvas.height,
+                r: Math.random() * 6 + 4, // radius 4-10
+                d: Math.random() * particleCount,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.floor(Math.random() * 10) - 10,
+                tiltAngleIncremental: (Math.random() * 0.07) + 0.05,
+                tiltAngle: 0
+            });
+        }
+    }
+
+    animateConfetti() {
+        const ctx = this.confettiCanvas.getContext('2d');
+        ctx.clearRect(0, 0, this.confettiCanvas.width, this.confettiCanvas.height);
+
+        this.confettiParticles.forEach((particle, index) => {
+            ctx.beginPath();
+            ctx.lineWidth = particle.r / 2;
+            ctx.strokeStyle = particle.color;
+            ctx.moveTo(particle.x + particle.tilt + particle.r, particle.y);
+            ctx.lineTo(particle.x + particle.tilt, particle.y + particle.tilt + particle.r);
+            ctx.stroke();
+
+            // Update particle position
+            particle.tiltAngle += particle.tiltAngleIncremental;
+            particle.y += (Math.cos(particle.d) + 3 + particle.r / 2) / 2;
+            particle.tilt = Math.sin(particle.tiltAngle - index / 3) * 15;
+
+            // Reset particle if it goes off screen
+            if (particle.y > this.confettiCanvas.height) {
+                this.confettiParticles[index] = {
+                    ...particle,
+                    x: Math.random() * this.confettiCanvas.width,
+                    y: -20,
+                    tilt: Math.floor(Math.random() * 10) - 10
+                };
+            }
+        });
+
+        this.confettiAnimationFrame = requestAnimationFrame(() => this.animateConfetti());
+    }
+
     // Pomodoro Timer Functions
     async startFocusMode(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
@@ -1021,23 +1224,7 @@ class TodoApp {
     }
 
     timerComplete() {
-        this.cleanupFocusMode();
-
-        // Send notification
-        if (Notification.permission === 'granted') {
-            const notification = new Notification('Focus Session Complete!', {
-                body: `Great job! You completed: ${this.currentTask.text}`,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2330d158"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
-                requireInteraction: true
-            });
-
-            notification.onclick = () => {
-                window.focus();
-                notification.close();
-            };
-        }
-
-        // Play a subtle sound (optional - browser support varies)
+        // Play completion sound
         try {
             const audio = new AudioContext();
             const oscillator = audio.createOscillator();
@@ -1057,6 +1244,67 @@ class TodoApp {
         } catch (e) {
             console.log('Audio not supported');
         }
+
+        if (!this.isBreakTime) {
+            // Work session complete - offer break
+            this.pomodoroCount++;
+            this.pomodorosToday++;
+
+            const isLongBreak = this.pomodoroCount % 4 === 0;
+            const breakDuration = isLongBreak ? 15 : 5;
+            const breakMessage = isLongBreak
+                ? `Great work! You've completed 4 pomodoros. Take a ${breakDuration}-minute break!`
+                : `Nice work! Take a ${breakDuration}-minute break?`;
+
+            this.cleanupFocusMode();
+
+            // Send notification
+            if (Notification.permission === 'granted') {
+                new Notification('Focus Session Complete!', {
+                    body: `You completed: ${this.currentTask.text}`,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2330d158"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>'
+                });
+            }
+
+            // Offer break
+            const takeBreak = confirm(breakMessage);
+            if (takeBreak) {
+                this.startBreak(breakDuration);
+            }
+        } else {
+            // Break complete
+            this.cleanupFocusMode();
+
+            if (Notification.permission === 'granted') {
+                new Notification('Break Complete!', {
+                    body: 'Time to get back to work! 💪',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%230071e3"><circle cx="12" cy="12" r="10"/></svg>'
+                });
+            }
+
+            alert('Break time is over! Ready to focus again? 💪');
+        }
+    }
+
+    startBreak(minutes) {
+        this.isBreakTime = true;
+        this.timerDuration = minutes * 60;
+        this.timeRemaining = this.timerDuration;
+        this.timerPaused = false;
+        this.focusModeActive = true;
+
+        // Show focus mode
+        this.focusMode.classList.remove('hidden');
+        this.focusTaskName.textContent = '☕ Break Time - Relax!';
+
+        // Change background color for break
+        document.querySelector('.focus-left').style.background = 'linear-gradient(135deg, #30d158 0%, #28b84a 100%)';
+
+        // Start live clock
+        this.startLiveClock();
+
+        // Start countdown
+        this.startCountdown();
     }
 
     cleanupFocusMode() {
