@@ -1070,7 +1070,7 @@ footer {
     font-size: 1rem;
     font-weight: 700;
     box-shadow: 0 3px 0 var(--blue-600);
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', monospace;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
     min-width: 45px;
     text-align: center;
 }
@@ -1246,7 +1246,7 @@ footer {
     font-weight: 600;
     color: var(--text-primary);
     box-shadow: 0 2px 0 var(--border-medium);
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', monospace;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
     min-width: 40px;
     text-align: center;
 }
